@@ -12,8 +12,9 @@
     onRuntimeInitialized: () => {
       // Wrap exported functions
       const cwrappings = {
-        plus:          ['plus', 'number', ['number', 'number']],
-        regex_compare: ['regex_compare', 'bool', ['string', 'string']],
+        regex_compare:  ['regex_compare', 'bool', ['string', 'string']],
+        free_c_string:  ['free_c_string', null, ['number']],
+        validate_regex: ['validate_regex', 'number', ['string']],
       }
 
       var lib = {}
@@ -22,12 +23,27 @@
         lib[fn] = Module.cwrap(...cwrappings[fn])
       }
 
+      // Safely wrap regex validation
+      const validate_regex = function(string) {
+        const ptr = lib.validate_regex(string)
+        if (ptr === 0) {
+          return null
+        } else {
+          const out = Module.Pointer_stringify(ptr)
+          lib.free_c_string(ptr)
+          return out
+        }
+      }
+
       // Use exported functions
       const updateResult = function() {
         const reg = document.getElementById('reg').value || ''
         const target = document.getElementById('target').value || ''
         var result = document.getElementById('result')
-        result.innerHTML = `
+        const regex_err = validate_regex(reg)
+        result.innerHTML = regex_err ? `
+          <span style='font-family: monospace; color: salmon'>${regex_err}</span>
+        ` : `
           <span style='font-family: monospace'>/${reg}/</span> ${
             lib.regex_compare(reg, target) ? 'matches' : 'does not match'
           } <span style='font-family: monospace'>"${target}"</span>
@@ -37,6 +53,13 @@
       document.getElementById('reg').onkeyup = updateResult
       document.getElementById('target').onkeyup = updateResult
       updateResult()
+
+      window.stupid_to_string = function(num) {
+        const ptr = lib.to_string(num)
+        const out = Module.Pointer_stringify(ptr)
+        lib.free_c_string(ptr)
+        return out
+      }
     },
   }
 

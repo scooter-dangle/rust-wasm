@@ -1,4 +1,4 @@
 [target.wasm32-unknown-emscripten]
 rustflags = [
-    "-Clink-args=-s EXPORTED_FUNCTIONS=['_regex_compare','_plus'] -s ASSERTIONS=1 -s TOTAL_MEMORY=134217728", # 2^27
+    "-Clink-args=-O3 -s EXPORTED_FUNCTIONS=['_regex_compare','_to_string','_free_c_string','_validate_regex'] -s TOTAL_MEMORY=134217728", # 2^27
 ]

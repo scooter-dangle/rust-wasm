@@ -8,7 +8,7 @@ fn main() {
 
 // from https://github.com/mrfr0g/rust-webassembly/blob/master/examples/string/src/main.rs
 use std::os::raw::c_char;
-use std::ffi::CStr;
+use std::ffi::{CStr,CString};
 
 use regex::Regex;
 use std::error::Error;
@@ -34,6 +34,27 @@ pub unsafe fn regex_compare(reg: *const c_char, target: *const c_char) -> bool {
 }
 
 #[no_mangle]
-pub fn plus(a: i32, b: i32) -> i32 {
-    a + b
+pub unsafe fn validate_regex(reg: *const c_char) -> *mut c_char {
+    let reg = ptr_to_string!(reg);
+    match Regex::new(&reg) {
+        Err(err) => {
+            let c_out = CString::new(String::from(err.description())).unwrap();
+            c_out.into_raw()
+        },
+        Ok(_) => 0 as *mut c_char,
+    }
+}
+
+#[no_mangle]
+pub fn to_string(num: i32) -> *mut c_char {
+    let c_out = CString::new(num.to_string()).unwrap();
+    // Don't wanna actually drop this since we're passing it across the FFI
+    // boundary.
+    c_out.into_raw()
+}
+
+#[no_mangle]
+pub unsafe fn free_c_string(ptr: *mut c_char) {
+    if ptr.is_null() { return; }
+    CString::from_raw(ptr);
 }
