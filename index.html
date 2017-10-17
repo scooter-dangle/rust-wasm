@@ -1,0 +1,44 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Yer browser seems a lil Rusty</title>
+<link rel="stylesheet" href="" />
+<input id='reg' type = 'text'>
+<input id='target' type = 'text'>
+<div id='result' />
+<script type='text/javascript'>
+
+  var Module = {
+    wasmBinaryFile: 'site.wasm',
+    onRuntimeInitialized: () => {
+      // Wrap exported functions
+      const cwrappings = {
+        plus:          ['plus', 'number', ['number', 'number']],
+        regex_compare: ['regex_compare', 'bool', ['string', 'string']],
+      }
+
+      var lib = {}
+
+      for (var fn in cwrappings) {
+        lib[fn] = Module.cwrap(...cwrappings[fn])
+      }
+
+      // Use exported functions
+      const updateResult = function() {
+        const reg = document.getElementById('reg').value || ''
+        const target = document.getElementById('target').value || ''
+        var result = document.getElementById('result')
+        result.innerHTML = `
+          <span style='font-family: monospace'>/${reg}/</span> ${
+            lib.regex_compare(reg, target) ? 'matches' : 'does not match'
+          } <span style='font-family: monospace'>"${target}"</span>
+        `
+      }
+
+      document.getElementById('reg').onkeyup = updateResult
+      document.getElementById('target').onkeyup = updateResult
+      updateResult()
+    },
+  }
+
+</script>
+<script src='site.js'></script>
