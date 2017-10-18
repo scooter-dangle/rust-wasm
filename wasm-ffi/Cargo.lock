@@ -1,5 +1,5 @@
 [root]
-name = "utils"
+name = "rust-wasm"
 version = "0.1.0"
 dependencies = [
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -47,13 +47,6 @@ dependencies = [
 name = "regex-syntax"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "rust-wasm"
-version = "0.1.0"
-dependencies = [
- "utils 0.1.0",
-]
 
 [[package]]
 name = "thread_local"

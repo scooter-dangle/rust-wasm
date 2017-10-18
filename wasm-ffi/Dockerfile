@@ -9,7 +9,7 @@ RUN apt-get install -y curl
 ENV WORKDIR /src
 WORKDIR ${WORKDIR}
 
-ADD ./rustup.sh $WORKDIR
+ADD ./wasm-ffi/rustup.sh $WORKDIR
 RUN ./rustup.sh -y
 ENV PATH /root/.cargo/bin:$PATH
 

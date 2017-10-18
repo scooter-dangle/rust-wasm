@@ -1,7 +1,6 @@
-[package]
-name = "rust-wasm"
-version = "0.1.0"
-authors = ["Scott Steele <scottlsteele@gmail.com>"]
+[workspace]
 
-[dependencies]
-regex = "*"
+members = [
+    "wasm-ffi",
+    "utils",
+]
