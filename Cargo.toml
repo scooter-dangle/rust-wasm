@@ -3,5 +3,9 @@ name = "rust-wasm"
 version = "0.1.0"
 authors = ["Scott Steele <scottlsteele@gmail.com>"]
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 regex = "*"
+wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen' }
