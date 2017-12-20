@@ -14,18 +14,32 @@
 
       .then(wasm => instantiate(wasm))
 
-      .then(mod => {
+      .then(({ CompiledRegex }) => {
+        var raw_reg = null
+
+        // Will be caching the compiled regular expression between
+        // changes. Needs to respond to the `free` function.
+        var compiled_reg = {
+          free: function() {},
+        }
+
         const updateResult = function() {
           const reg = document.getElementById('reg').value || ''
           const target = document.getElementById('target').value || ''
-          var result = document.getElementById('result')
-          const regex_err = mod.validate_regex(reg)
-          result.innerHTML = regex_err === "" ? `
+          const result = document.getElementById('result')
+
+          if (raw_reg !== reg) {
+            compiled_reg.free()
+            compiled_reg = CompiledRegex.new(reg)
+            raw_reg = reg
+          }
+
+          result.innerHTML = compiled_reg.is_valid() ? `
             <span style='font-family: monospace'>/${reg}/</span> ${
-              mod.regex_compare(reg, target) ? 'matches' : 'does not match'
+              compiled_reg.is_match(target) ? 'matches' : 'does not match'
             } <span style='font-family: monospace'>"${target}"</span>
           ` : `
-            <span style='font-family: monospace; color: salmon'>${regex_err}</span>
+            <span style='font-family: monospace; color: salmon'>${compiled_reg.error_message()}</span>
           `
         }
 

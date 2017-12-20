@@ -9,23 +9,34 @@ use regex::Regex;
 use std::error::Error;
 
 wasm_bindgen! {
-    pub fn greet(name: &str) -> String {
-        format!("Hello, {}!", name)
+    pub struct CompiledRegex {
+        compiled_regex: Option<Regex>,
+        pub error: String,
     }
 
-    pub fn validate_regex(string: &str) -> String {
-        match Regex::new(string) {
-            Ok(_) => "".into(),
-            Err(err) => err.description().into(),
+    impl CompiledRegex {
+        pub fn new(reg: &str) -> CompiledRegex {
+            let (compiled_regex, error) = match Regex::new(reg) {
+                Ok(reg) => (Some(reg), "".into()),
+                Err(error) => (None, error.description().into()),
+            };
+
+            Self { compiled_regex, error }
         }
-    }
 
-    pub fn regex_compare(needle: &str, haystack: &str) -> u8 {
-        match Regex::new(needle)
-            .map(|needle| needle.is_match(haystack))
-            .unwrap_or(false) {
-                true => 1,
-                false => 0,
-            }
+        pub fn is_match(&self, target: &str) -> bool {
+            self.compiled_regex
+                .as_ref()
+                .map(|reg| reg.is_match(target))
+                .unwrap_or(false)
+        }
+
+        pub fn is_valid(&self) -> bool {
+            self.compiled_regex.is_some()
+        }
+
+        pub fn error_message(&self) -> String {
+            self.error.clone()
+        }
     }
 }
