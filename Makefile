@@ -1,5 +1,5 @@
 all:
-	cargo +stable build --release --target wasm32-unknown-emscripten
+	cargo +stable build --release --target wasm32-unknown-emscripten --verbose
 	mkdir --parents site
 	cp index.html site/
 	find target/wasm32-unknown-emscripten/release/deps -type f -name "*.wasm" | xargs -I '{}' cp '{}' site/site.wasm

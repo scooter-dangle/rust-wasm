@@ -9,40 +9,58 @@ fn main() {
 // from https://github.com/mrfr0g/rust-webassembly/blob/master/examples/string/src/main.rs
 use std::os::raw::c_char;
 use std::ffi::{CStr,CString};
+use std::ptr;
 
 use regex::Regex;
 use std::error::Error;
-
-macro_rules! regex {
-    ($reg:expr) => { Regex::new($reg).map_err(From::from) }
-}
 
 macro_rules! ptr_to_string {
     ($item:expr) => { CStr::from_ptr($item).to_string_lossy().into_owned() }
 }
 
-fn safe_regex_compare(reg: String, target: String) -> Result<bool, Box<Error>> {
-    regex!(&reg).map(|reg| reg.is_match(&target))
-}
-
 // See the declarations of this function in .cargo/config and wasm.html
 #[no_mangle]
-pub unsafe fn regex_compare(reg: *const c_char, target: *const c_char) -> bool {
-    let reg    = ptr_to_string!(reg);
+pub unsafe fn regex_compare(reg: *const regex::Regex, target: *const c_char) -> bool {
     let target = ptr_to_string!(target);
-    safe_regex_compare(reg, target).unwrap()
+    (*reg).is_match(&target)
 }
 
 #[no_mangle]
-pub unsafe fn validate_regex(reg: *const c_char) -> *mut c_char {
+pub unsafe fn regex_compile(reg: *const c_char) -> *mut Result<regex::Regex, CString> {
     let reg = ptr_to_string!(reg);
-    match Regex::new(&reg) {
-        Err(err) => {
-            let c_out = CString::new(String::from(err.description())).unwrap();
-            c_out.into_raw()
-        },
-        Ok(_) => 0 as *mut c_char,
+    let out = Box::new(
+        Regex::new(&reg)
+        .map_err(|err| CString::new(String::from(err.description())).unwrap())
+    );
+    Box::into_raw(out)
+}
+
+#[no_mangle]
+pub unsafe fn regex_is_ok(result: *const Result<regex::Regex, CString>) -> bool {
+    (*result).is_ok()
+}
+
+#[no_mangle]
+pub unsafe fn regex_get_regex(result: *mut Result<regex::Regex, CString>) -> *mut regex::Regex {
+    let result = Box::from_raw(result);
+    match *result {
+        Ok(reg) => Box::into_raw(Box::new(reg)),
+        Err(_) => ptr::null_mut(),
     }
+}
+
+#[no_mangle]
+pub unsafe fn regex_get_err(result: *mut Result<regex::Regex, CString>) -> *mut c_char {
+    let result: Box<Result<regex::Regex, CString>> = Box::from_raw(result);
+    match *result {
+        Err(err) => err.into_raw(),
+        Ok(_) => ptr::null_mut(),
+    }
+}
+
+#[no_mangle]
+pub unsafe fn free_regex(reg: *mut regex::Regex) {
+    Box::from_raw(reg);
 }
 
 #[no_mangle]
