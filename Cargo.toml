@@ -8,4 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 regex = "*"
-wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen' }
+wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen', rev = 'bef908a9b110e7ac0828a1eb391f56b25f01ec18' }

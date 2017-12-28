@@ -1,3 +1,5 @@
 site
 target
 node_modules
+site.ts
+site.d.ts
