@@ -23,8 +23,7 @@ all: node_modules/typescript/bin/tsc
 	cp index.html site/
 	mv site.js site/
 	# Might be pointless...might already be run
-	# wasm-gc site.wasm site/site.wasm
-	cp site.wasm site/site.wasm
+	wasm-gc site.wasm site/site.wasm
 	rm site.wasm
 
 node_modules/typescript/bin/tsc:
