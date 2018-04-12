@@ -13,14 +13,14 @@ ADD ./rustup.sh $WORKDIR
 RUN ./rustup.sh -y
 ENV PATH /root/.cargo/bin:$PATH
 
-ENV TOOLCHAIN_DATE 2017-12-15-
+ENV TOOLCHAIN_DATE 2018-04-07-
 ENV TOOLCHAIN nightly-${TOOLCHAIN_DATE}x86_64-unknown-linux-gnu
 
 RUN rustup update
 RUN rustup toolchain install ${TOOLCHAIN}
 RUN rustup target add wasm32-unknown-unknown --toolchain ${TOOLCHAIN}
-RUN cargo +${TOOLCHAIN} install --git https://github.com/alexcrichton/wasm-bindgen --rev bef908a9b110e7ac0828a1eb391f56b25f01ec18
-RUN cargo +${TOOLCHAIN} install --git https://github.com/alexcrichton/wasm-gc --rev fbdc8b1e
+RUN cargo +${TOOLCHAIN} install wasm-bindgen-cli
+RUN cargo +${TOOLCHAIN} install wasm-gc
 
 ADD ./nodejs.sh $WORKDIR
 RUN ./nodejs.sh

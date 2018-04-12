@@ -1,6 +1,6 @@
 [package]
 name = "rust-wasm"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Scott Steele <scottlsteele@gmail.com>"]
 
 [lib]
@@ -8,4 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 regex = "*"
-wasm-bindgen = { git = 'https://github.com/alexcrichton/wasm-bindgen', rev = 'bef908a9b110e7ac0828a1eb391f56b25f01ec18' }
+wasm-bindgen = "0.2"

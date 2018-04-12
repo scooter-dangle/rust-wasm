@@ -1,4 +1,4 @@
-#![feature(proc_macro)]
+#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
 
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
@@ -8,35 +8,35 @@ use regex::Regex;
 
 use std::error::Error;
 
-wasm_bindgen! {
-    pub struct CompiledRegex {
-        compiled_regex: Option<Regex>,
-        pub error: String,
+#[wasm_bindgen]
+pub struct CompiledRegex {
+    compiled_regex: Option<Regex>,
+    pub error: String,
+}
+
+#[wasm_bindgen]
+impl CompiledRegex {
+    pub fn new(reg: &str) -> CompiledRegex {
+        let (compiled_regex, error) = match Regex::new(reg) {
+            Ok(reg) => (Some(reg), "".into()),
+            Err(error) => (None, error.description().into()),
+        };
+
+        Self { compiled_regex, error }
     }
 
-    impl CompiledRegex {
-        pub fn new(reg: &str) -> CompiledRegex {
-            let (compiled_regex, error) = match Regex::new(reg) {
-                Ok(reg) => (Some(reg), "".into()),
-                Err(error) => (None, error.description().into()),
-            };
+    pub fn is_match(&self, target: &str) -> bool {
+        self.compiled_regex
+            .as_ref()
+            .map(|reg| reg.is_match(target))
+            .unwrap_or(false)
+    }
 
-            Self { compiled_regex, error }
-        }
+    pub fn is_valid(&self) -> bool {
+        self.compiled_regex.is_some()
+    }
 
-        pub fn is_match(&self, target: &str) -> bool {
-            self.compiled_regex
-                .as_ref()
-                .map(|reg| reg.is_match(target))
-                .unwrap_or(false)
-        }
-
-        pub fn is_valid(&self) -> bool {
-            self.compiled_regex.is_some()
-        }
-
-        pub fn error_message(&self) -> String {
-            self.error.clone()
-        }
+    pub fn error_message(&self) -> String {
+        self.error.clone()
     }
 }

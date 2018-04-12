@@ -8,7 +8,7 @@ ifeq ($(UNAME), Darwin)
 	TOOLCHAIN_TRIPLE = -x86_64-apple-darwin
 endif
 
-TOOLCHAIN_DATE = -2017-12-15
+TOOLCHAIN_DATE = -2018-04-07
 
 TOOLCHAIN = nightly${TOOLCHAIN_DATE}${TOOLCHAIN_TRIPLE}
 
@@ -16,15 +16,17 @@ TOOLCHAIN = nightly${TOOLCHAIN_DATE}${TOOLCHAIN_TRIPLE}
 all: node_modules/typescript/bin/tsc
 	cargo +${TOOLCHAIN} build --release --target wasm32-unknown-unknown
 	wasm-bindgen target/wasm32-unknown-unknown/release/rust_wasm.wasm \
-		--output-ts site.ts \
-		--output-wasm site.wasm
-	./node_modules/typescript/bin/tsc site.ts --lib es6 --module es2015 --declaration --pretty
-	mkdir --parents site
-	cp index.html site/
-	mv site.js site/
+		--typescript \
+		--browser \
+		--out-dir .
+	# ./node_modules/typescript/bin/tsc site.ts --lib es6 --module es2015 --declaration --pretty
 	# Might be pointless...might already be run
-	wasm-gc site.wasm site/site.wasm
-	rm site.wasm
+	wasm-gc rust_wasm_bg.wasm rust_wasm_bg.wasm
+	# Workaround for Chrome
+	wasm2es6js --base64 --output rust_wasm_bg.js rust_wasm_bg.wasm
+# wasm2es6js --base64 -o hello_world_bg.js hello_world_bg.wasm
+	rm rust_wasm_bg.wasm
+
 
 node_modules/typescript/bin/tsc:
 	# Super lame, but it was easier to get this working when it was installed locally
