@@ -13,11 +13,11 @@ docker build . --tag $(basename $PWD)
 docker run --rm --workdir /src --volume $PWD:/src $(basename $PWD) make
 ```
 
-Then serve the contents of `./site` and navigate to `index.html` using a modern
+Then serve the contents of `./target/deploy` and navigate to `index.html` using a modern
 browser. (E.g., if you have Ruby installed, you'd do
 
 ```sh
-ruby -run -e httpd site
+ruby -run -e httpd target/deploy
 ```
 
 and then navigate to `localhost:8080`.)

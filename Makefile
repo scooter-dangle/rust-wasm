@@ -1,12 +1,13 @@
-all:
-	cargo +stable build --release --target wasm32-unknown-emscripten
-	mkdir --parents site
-	cp index.html site/
-	find target/wasm32-unknown-emscripten/release/deps -type f -name "*.wasm" | xargs -I '{}' cp '{}' site/site.wasm
-	find target/wasm32-unknown-emscripten/release/deps -type f ! -name "*.asm.js" -name "*.js" | xargs -I '{}' cp '{}' site/site.js
+all: remove_output
+	cargo +stable web build --release --target wasm32-unknown-emscripten
+	cargo +stable web deploy --release --target wasm32-unknown-emscripten
 .PHONY: all
 
-clean:
+# Lame but for some reason it's necessary for the build/deploy to function
+remove_output:
+	rm --recursive --force target/wasm32-unknown-emscripten target/deploy
+.PHONY: remove_output
+
+clean: remove_output
 	cargo clean
-	rm --recursive --force site
 .PHONY: clean

@@ -1,60 +1,104 @@
 extern crate regex;
 
-extern {}
-
-fn main() {
-    /* Intentionally left blank */
-}
-
-// from https://github.com/mrfr0g/rust-webassembly/blob/master/examples/string/src/main.rs
-use std::os::raw::c_char;
-use std::ffi::{CStr,CString};
-
 use regex::Regex;
 use std::error::Error;
 
 macro_rules! regex {
-    ($reg:expr) => { Regex::new($reg).map_err(From::from) }
+    ($reg:expr) => { Regex::new($reg) }
 }
 
-macro_rules! ptr_to_string {
-    ($item:expr) => { CStr::from_ptr($item).to_string_lossy().into_owned() }
+#[macro_use]
+extern crate yew;
+use yew::html::*;
+
+fn main() {
+    program(Model::new(), update, view);
 }
 
-fn safe_regex_compare(reg: String, target: String) -> Result<bool, Box<Error>> {
-    regex!(&reg).map(|reg| reg.is_match(&target))
+struct Model {
+    target: String,
+    regex: String,
+    compiled_regex: Result<Regex, String>,
 }
 
-// See the declarations of this function in .cargo/config and wasm.html
-#[no_mangle]
-pub unsafe fn regex_compare(reg: *const c_char, target: *const c_char) -> bool {
-    let reg    = ptr_to_string!(reg);
-    let target = ptr_to_string!(target);
-    safe_regex_compare(reg, target).unwrap()
-}
-
-#[no_mangle]
-pub unsafe fn validate_regex(reg: *const c_char) -> *mut c_char {
-    let reg = ptr_to_string!(reg);
-    match Regex::new(&reg) {
-        Err(err) => {
-            let c_out = CString::new(String::from(err.description())).unwrap();
-            c_out.into_raw()
-        },
-        Ok(_) => 0 as *mut c_char,
+impl Default for Model {
+    fn default() -> Self {
+        Self {
+            target: "".into(),
+            regex: "".into(),
+            compiled_regex: regex!("").map_err(|_| unreachable!()),
+        }
     }
 }
 
-#[no_mangle]
-pub fn to_string(num: i32) -> *mut c_char {
-    let c_out = CString::new(num.to_string()).unwrap();
-    // Don't wanna actually drop this since we're passing it across the FFI
-    // boundary.
-    c_out.into_raw()
+impl Model {
+    fn new() -> Self {
+        Self::default()
+    }
 }
 
-#[no_mangle]
-pub unsafe fn free_c_string(ptr: *mut c_char) {
-    if ptr.is_null() { return; }
-    CString::from_raw(ptr);
+enum Msg {
+    Target(String),
+    Regex(String),
+}
+
+fn update(_context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
+    match msg {
+        Msg::Target(new_target) => {
+            model.target = new_target;
+        },
+        Msg::Regex(new_regex) => {
+            model.regex = new_regex;
+            model.compiled_regex = regex!(&model.regex)
+                .map_err(|err| err.description().into());
+        },
+    }
+}
+
+fn view(model: &Model) -> Html<Msg> {
+    html! {
+        <div>
+            <input oninput=|InputData { value }| Msg::Regex(value),  type="text", value={ &model.regex  }, ></input>
+            <input oninput=|InputData { value }| Msg::Target(value), type="text", value={ &model.target }, ></input>
+            <p>{
+                match model.compiled_regex {
+                    Ok(ref reg)  => partial::match_status(&model.regex, reg, &model.target),
+                    Err(ref err) => partial::regex_error(err),
+                }
+            }</p>
+        </div>
+    }
+}
+
+mod partial {
+    use super::*;
+
+    fn nbsp<T>(string: T) -> String where String: From<T> {
+        String::from(string).replace(' ', "\u{00a0}")
+    }
+
+    fn match_string(match_cond: bool) -> &'static str {
+        if match_cond { " matches " } else { " does not match " }
+    }
+
+    pub(super) fn regex_error(error: &str) -> Html<Msg> {
+        html! {
+            <div
+                style="
+                    font-family: 'Monaco', monospace;
+                    color: salmon;
+                ",
+            >{ nbsp(error) }</div>
+        }
+    }
+
+    pub(super) fn match_status(regex: &str, compiled_regex: &Regex, target: &str) -> Html<Msg> {
+        html! {
+            <div>
+                <span style="font-family: 'Monaco', monospace;", >{ nbsp(format!("/{}/", regex)) }</span>
+                { nbsp(match_string(compiled_regex.is_match(target))) }
+                <span style="font-family: 'Monaco', monospace;", >{ nbsp(format!("{:?}", target)) }</span>
+            </div>
+        }
+    }
 }
