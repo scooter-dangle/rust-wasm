@@ -13,11 +13,13 @@ docker build . --tag $(basename $PWD)
 docker run --rm --workdir /src --volume $PWD:/src $(basename $PWD) make
 ```
 
-Then serve the contents of `./site` and navigate to `index.html` using a modern
-browser. (E.g., if you have Ruby installed, you'd do
+Then serve the contents of the current directory and navigate to `index.html`
+using a modern browser. (E.g., if you have `microserver` installed, you'd do
 
 ```sh
-ruby -run -e httpd site
+microserver --port 8000
 ```
+
+(To install microserver, run `cargo install microserver`.)
 
 and then navigate to `localhost:8080`.)
